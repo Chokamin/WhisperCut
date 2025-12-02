@@ -1,0 +1,54 @@
+# Xcode
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata
+*.xcworkspace/*
+!*.xcworkspace/contents.xcworkspacedata
+!*.xcworkspace/xcshareddata
+xcuserdata/
+*.xcuserstate
+*.xcuserdatad
+**/xcuserdata/
+**/*.xcuserstate
+**/*.xcuserdatad
+
+# Build
+build/
+DerivedData/
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Package.resolved
+
+# CocoaPods
+Pods/
+*.podspec
+
+# Carthage
+Carthage/Build/
+
+# Large dependencies
+sherpa-onnx/
+Frameworks/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Temporary files
+*.swp
+*~.nib
+*.tmp
+*.temp
+
+# IDE
+.idea/
+.vscode/
+*.code-workspace
+
