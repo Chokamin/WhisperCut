@@ -34,9 +34,12 @@ class WhisperService: ObservableObject {
 
     /// Get available models that can be downloaded
     static func availableModels() async -> [String] {
-        do {
-            return try await WhisperKit.recommendedModels().supported
-        } catch {
+        // Get recommended models, fallback to default list if unavailable
+        // Note: recommendedModels() is not async or throwing
+        let recommended = WhisperKit.recommendedModels()
+        if !recommended.supported.isEmpty {
+            return recommended.supported
+        } else {
             return ["base", "small", "medium", "large-v3"]
         }
     }
