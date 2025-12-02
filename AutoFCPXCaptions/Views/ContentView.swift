@@ -1,5 +1,6 @@
 import SwiftUI
 import UniformTypeIdentifiers
+import AppKit
 
 /// Main content view of the application
 struct ContentView: View {
@@ -98,6 +99,13 @@ struct ContentView: View {
                         }
                     )
                     .contentShape(Rectangle())
+                    .onHover { hovering in
+                        if hovering {
+                            NSCursor.pointingHand.push()
+                        } else {
+                            NSCursor.pop()
+                        }
+                    }
                     .onTapGesture {
                         openFilePicker()
                     }
@@ -191,6 +199,13 @@ struct ContentView: View {
                             .foregroundStyle(.secondary)
                     }
                     .buttonStyle(.plain)
+                    .onHover { hovering in
+                        if hovering {
+                            NSCursor.pointingHand.push()
+                        } else {
+                            NSCursor.pop()
+                        }
+                    }
                 }
                 .padding(8)
             } else {
@@ -248,6 +263,13 @@ struct ContentView: View {
         )
         .animation(.easeInOut(duration: 0.2), value: isFileDropTargeted)
         .contentShape(Rectangle())
+        .onHover { hovering in
+            if hovering {
+                NSCursor.pointingHand.push()
+            } else {
+                NSCursor.pop()
+            }
+        }
         .onDrop(of: [.fileURL], isTargeted: $isFileDropTargeted) { providers in
             handleDrop(providers: providers)
         }
@@ -340,6 +362,13 @@ struct ContentView: View {
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
+                    .onHover { hovering in
+                        if hovering {
+                            NSCursor.pointingHand.push()
+                        } else {
+                            NSCursor.pop()
+                        }
+                    }
 
                     // Delete model button
                     Button {
@@ -372,6 +401,13 @@ struct ContentView: View {
                     .buttonStyle(.bordered)
                     .controlSize(.small)
                     .disabled(!appState.isModelDownloaded(appState.selectedModelSize) || appState.isDeletingModel)
+                    .onHover { hovering in
+                        if hovering && !appState.isDeletingModel {
+                            NSCursor.pointingHand.push()
+                        } else {
+                            NSCursor.pop()
+                        }
+                    }
                 }
             }
             .padding(4)
@@ -387,19 +423,25 @@ struct ContentView: View {
     @ViewBuilder
     private var processingStatusView: some View {
         VStack(spacing: 8) {
-            // Status indicator at top
+            // Status indicator at top - always reserve space for it
             statusIndicator
+                .frame(height: statusIndicatorHeight)
 
-            // Caption list takes remaining space
-            if hasSegments || appState.processingState.isTranscribing {
-                CaptionListView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if hasMedia {
-                // Empty state when media loaded but no transcription yet
-                Spacer()
-            }
+            // Caption list takes remaining space - always show to maintain consistent layout
+            // Always show CaptionListView to maintain consistent size, even when no media is loaded
+            CaptionListView()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .layoutPriority(1)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+    
+    // Fixed height for status indicator to maintain consistent layout
+    // Use the maximum height (transcribing/completed) to ensure consistent spacing
+    private var statusIndicatorHeight: CGFloat {
+        // Always reserve space for the tallest status indicator (transcribing/completed with progress bar)
+        // This ensures the subtitle area size remains consistent
+        return 60
     }
 
     @ViewBuilder
@@ -532,7 +574,9 @@ struct ContentView: View {
             .padding(.vertical, 8)
 
         case .idle:
-            EmptyView()
+            // Reserve space even when idle to maintain consistent layout
+            Spacer()
+                .frame(height: 0)
         }
     }
 
@@ -569,6 +613,13 @@ struct ContentView: View {
                 .buttonStyle(.borderedProminent)
                 .tint(.purple)
                 .disabled(appState.processingState.isProcessing)
+                .onHover { hovering in
+                    if hovering && !appState.processingState.isProcessing {
+                        NSCursor.pointingHand.push()
+                    } else {
+                        NSCursor.pop()
+                    }
+                }
 
                 // Export to FCPX
                 Button {
@@ -589,6 +640,13 @@ struct ContentView: View {
                 .buttonStyle(.borderedProminent)
                 .tint(.black)
                 .disabled(appState.segments.isEmpty)
+                .onHover { hovering in
+                    if hovering && !appState.segments.isEmpty {
+                        NSCursor.pointingHand.push()
+                    } else {
+                        NSCursor.pop()
+                    }
+                }
             }
             .controlSize(.large)
 
@@ -606,6 +664,13 @@ struct ContentView: View {
                 .buttonStyle(.borderedProminent)
                 .tint(.green)
                 .disabled(appState.segments.isEmpty)
+                .onHover { hovering in
+                    if hovering && !appState.segments.isEmpty {
+                        NSCursor.pointingHand.push()
+                    } else {
+                        NSCursor.pop()
+                    }
+                }
 
                 // Download FCPXML
                 Button {
@@ -619,6 +684,13 @@ struct ContentView: View {
                 .buttonStyle(.borderedProminent)
                 .tint(.blue)
                 .disabled(appState.segments.isEmpty)
+                .onHover { hovering in
+                    if hovering && !appState.segments.isEmpty {
+                        NSCursor.pointingHand.push()
+                    } else {
+                        NSCursor.pop()
+                    }
+                }
             }
             .controlSize(.large)
         }

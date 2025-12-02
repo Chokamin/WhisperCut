@@ -290,6 +290,46 @@ class AppState: ObservableObject {
         )
     }
 
+    /// Merge segments with gaps less than 2 seconds
+    /// If the gap between two segments is less than 2 seconds, extend the previous segment to the start of the next one
+    private func mergeCloseSegments(_ segments: [SubtitleSegment]) -> [SubtitleSegment] {
+        guard segments.count > 1 else { return segments }
+        
+        // Sort segments by start time to ensure correct processing order
+        let sortedSegments = segments.sorted { $0.startTime < $1.startTime }
+        
+        var result: [SubtitleSegment] = []
+        let minGap: TimeInterval = 2.0 // 2 seconds
+        
+        for (index, segment) in sortedSegments.enumerated() {
+            if index == 0 {
+                // First segment, just add it
+                result.append(segment)
+            } else {
+                var previousSegment = result[result.count - 1]
+                let gap = segment.startTime - previousSegment.endTime
+                
+                if gap < minGap && gap >= 0 {
+                    // Gap is less than 2 seconds (including 0 for overlapping segments)
+                    // Extend previous segment to start of current segment to eliminate gap
+                    previousSegment.endTime = segment.startTime
+                    result[result.count - 1] = previousSegment
+                    result.append(segment)
+                } else if gap < 0 {
+                    // Segments overlap, extend previous segment to current segment's start
+                    previousSegment.endTime = segment.startTime
+                    result[result.count - 1] = previousSegment
+                    result.append(segment)
+                } else {
+                    // Gap is 2 seconds or more, keep as is
+                    result.append(segment)
+                }
+            }
+        }
+        
+        return result
+    }
+
     /// Export to FCPXML and open in Final Cut Pro
     func exportToFCPX() async {
         print("exportToFCPX called. Segments count: \(segments.count)")
@@ -303,10 +343,14 @@ class AppState: ObservableObject {
         processingState = .generatingXML
 
         do {
-            // 1. Generate FCPXML
-            print("Generating FCPXML with \(segments.count) segments...")
+            // 1. Merge segments with gaps less than 2 seconds
+            let mergedSegments = mergeCloseSegments(segments)
+            print("After merging: \(mergedSegments.count) segments (was \(segments.count))")
+            
+            // 2. Generate FCPXML
+            print("Generating FCPXML with \(mergedSegments.count) segments...")
             let generator = FCPXMLGenerator(frameRate: selectedFrameRate)
-            let xmlURL = try generator.generate(segments: segments, mediaFileName: mediaFileName)
+            let xmlURL = try generator.generate(segments: mergedSegments, mediaFileName: mediaFileName)
 
             print("FCPXML generated at: \(xmlURL.path)")
 
@@ -342,7 +386,9 @@ class AppState: ObservableObject {
         }
 
         do {
-            let tempURL = try srtGenerator.generate(segments: segments, mediaFileName: mediaFileName)
+            // Merge segments with gaps less than 2 seconds
+            let mergedSegments = mergeCloseSegments(segments)
+            let tempURL = try srtGenerator.generate(segments: mergedSegments, mediaFileName: mediaFileName)
             let suggestedName = mediaFileName.isEmpty ? "subtitles" : (mediaFileName as NSString).deletingPathExtension
             _ = await SRTGenerator.saveWithDialog(from: tempURL, suggestedName: suggestedName)
 
@@ -362,8 +408,10 @@ class AppState: ObservableObject {
         }
 
         do {
+            // Merge segments with gaps less than 2 seconds
+            let mergedSegments = mergeCloseSegments(segments)
             let generator = FCPXMLGenerator(frameRate: selectedFrameRate)
-            let tempURL = try generator.generate(segments: segments, mediaFileName: mediaFileName)
+            let tempURL = try generator.generate(segments: mergedSegments, mediaFileName: mediaFileName)
             let suggestedName = mediaFileName.isEmpty ? "subtitles" : (mediaFileName as NSString).deletingPathExtension
             _ = await FCPXMLGenerator.saveWithDialog(from: tempURL, suggestedName: suggestedName)
 

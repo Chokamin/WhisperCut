@@ -120,7 +120,14 @@ class WhisperService: ObservableObject {
                 for segment in discoveredSegments {
                     var text = segment.text
                     text = self.cleanWhisperTokens(text)
-                    if language == .chineseTraditional {
+                    // Convert between Simplified and Traditional Chinese based on selected language
+                    if language == .chineseSimplified {
+                        // Convert Traditional to Simplified
+                        if let converted = text.applyingTransform(StringTransform("Hant-Hans"), reverse: false) {
+                            text = converted
+                        }
+                    } else if language == .chineseTraditional {
+                        // Convert Simplified to Traditional
                         if let converted = text.applyingTransform(StringTransform("Hans-Hant"), reverse: false) {
                             text = converted
                         }
@@ -173,7 +180,14 @@ class WhisperService: ObservableObject {
             for segment in result.segments {
                 var text = segment.text
                 text = cleanWhisperTokens(text)
-                if language == .chineseTraditional {
+                // Convert between Simplified and Traditional Chinese based on selected language
+                if language == .chineseSimplified {
+                    // Convert Traditional to Simplified
+                    if let converted = text.applyingTransform(StringTransform("Hant-Hans"), reverse: false) {
+                        text = converted
+                    }
+                } else if language == .chineseTraditional {
+                    // Convert Simplified to Traditional
                     if let converted = text.applyingTransform(StringTransform("Hans-Hant"), reverse: false) {
                         text = converted
                     }

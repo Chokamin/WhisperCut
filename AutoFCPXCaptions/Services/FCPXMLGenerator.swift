@@ -64,6 +64,7 @@ class FCPXMLGenerator {
     }
 
     /// Ensure minimum gap between segments to avoid FCPX import conflicts
+    /// Only adds gap if segments overlap, otherwise preserves the original timing
     private func ensureMinimumGaps(_ segments: [SubtitleSegment]) -> [SubtitleSegment] {
         var result: [SubtitleSegment] = []
         let minGap = Double(minGapFrames) * frameRate.frameDurationSeconds
@@ -73,9 +74,12 @@ class FCPXMLGenerator {
 
             // Check if this segment overlaps with the previous one
             if let lastSegment = result.last {
-                if adjustedSegment.startTime < lastSegment.endTime + minGap {
+                // Only adjust if segments actually overlap (not just close)
+                if adjustedSegment.startTime < lastSegment.endTime {
+                    // Segments overlap, add minimum gap
                     adjustedSegment.startTime = lastSegment.endTime + minGap
                 }
+                // If segments don't overlap, keep original timing (even if gap is small)
             }
 
             // Ensure segment has positive duration
